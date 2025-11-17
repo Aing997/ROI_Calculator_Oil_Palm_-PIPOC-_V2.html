@@ -63,59 +63,6 @@
         .btn { background-color: var(--accent-color); color: #fff; border: none; border-radius: 8px; padding: 14px 28px; font-size: 1.1em; font-weight: 700; cursor: pointer; transition: all 0.3s; }
         .btn:hover { background-color: #ffb300; transform: translateY(-2px); }
 
-        /* Modal specific styles */
-        .modal {
-            display: none; 
-            position: fixed; 
-            z-index: 1000; 
-            left: 0;
-            top: 0;
-            width: 100%; 
-            height: 100%; 
-            overflow: auto; 
-            background-color: rgba(0,0,0,0.4); 
-        }
-        .modal-content {
-            background-color: #fefefe;
-            margin: 10% auto; 
-            padding: 25px;
-            border: 1px solid #888;
-            width: 80%; 
-            max-width: 500px;
-            border-radius: 10px;
-            position: relative;
-            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
-        }
-        .close-button {
-            color: #aaa;
-            float: right;
-            font-size: 28px;
-            font-weight: bold;
-            cursor: pointer;
-        }
-        .close-button:hover,
-        .close-button:focus {
-            color: #000;
-            text-decoration: none;
-            cursor: pointer;
-        }
-        .modal-content h2 {
-            color: var(--primary-color);
-            margin-top: 0;
-            margin-bottom: 20px;
-            font-size: 1.5em;
-            text-align: center;
-        }
-        .modal-content .form-group label {
-            font-size: 1em;
-            margin-bottom: 6px;
-        }
-        .modal-content .btn {
-            width: 100%;
-            margin-top: 20px;
-            padding: 15px;
-        }
-
         /* Styles for new table structure */
         .volume-discount-table {
             width: 100%;
@@ -231,7 +178,6 @@
                 <div class="metric-label">5-Year ROI</div>
                 <div class="metric-value" id="roi-5-year">0%</div>
             </div>
-            <!-- Removed Payback Period section -->
         </div>
 
         <h3>Annual Financial Comparison</h3>
@@ -266,41 +212,17 @@
         
         <div class="cta-section">
             <p>Ready to unlock your farm's full potential? Let's talk.</p>
-            <a href="#" class="btn" id="openDemoModalBtn">Book a Personalized Demo</a>
+            <!-- UPDATED: The href now points directly to your Google Form -->
+            <a href="https://forms.gle/wnETpbmCjuWb6hgk9" class="btn" id="openDemoModalBtn" target="_blank">Book a Personalized Demo</a>
         </div>
     </div>
 </div>
 
-<!-- Demo Request Modal -->
-<div id="demoModal" class="modal">
-    <div class="modal-content">
-        <span class="close-button">&times;</span>
-        <h2>Book Your Personalized Demo</h2>
-        <form id="demo-request-form">
-            <div class="form-group">
-                <label for="demo-name">Your Name</label>
-                <input type="text" id="demo-name" required>
-            </div>
-            <div class="form-group">
-                <label for="demo-email">Your Email</label>
-                <input type="email" id="demo-email" required>
-            </div>
-            <div class="form-group">
-                <label for="demo-company">Company/Farm Name</label>
-                <input type="text" id="demo-company">
-            </div>
-            <div class="form-group">
-                <label for="demo-hectares">Total Hectares</label>
-                <input type="number" id="demo-hectares" disabled> <!-- Pre-populated and disabled -->
-            </div>
-            <div class="form-group">
-                <label for="demo-crop-type">Crop Type</label>
-                <input type="text" id="demo-crop-type" value="Oil Palm" disabled> <!-- Pre-populated and disabled -->
-            </div>
-            <button type="submit" class="btn">Submit Demo Request</button>
-        </form>
-    </div>
-</div>
+<!-- 
+    The original "Demo Request Modal" HTML is no longer needed 
+    since the button now links directly to the Google Form. 
+    It has been removed from this code.
+-->
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -478,8 +400,8 @@ document.addEventListener('DOMContentLoaded', function() {
         // Calculate the annual subscription cost based on the selected term and its specific price
         let annualSubCost = hectares * getAnnualSubPricePerHa(hectares, term); 
 
-        const netAnnualBenefit = totalAnnualGrossBenefit - annualSubCost;
-        
+        // const netAnnualBenefit = totalAnnualGrossBenefit - annualSubCost; // No longer displayed directly
+
         const totalCost5Year = implementationCost + (annualSubCost * 5); 
         const totalBenefit5Year = totalAnnualGrossBenefit * 5;
         const netBenefit5Year = totalBenefit5Year - totalCost5Year;
@@ -503,45 +425,9 @@ document.addEventListener('DOMContentLoaded', function() {
         updateVolumeDiscountTable(hectares); // Update the volume discount table
     }
 
-    // --- Modal Logic ---
-    const openDemoModalBtn = document.getElementById('openDemoModalBtn');
-    const demoModal = document.getElementById('demoModal');
-    const closeButton = demoModal.querySelector('.close-button');
-    const demoRequestForm = document.getElementById('demo-request-form');
-
-    openDemoModalBtn.addEventListener('click', function(event) {
-        event.preventDefault(); 
-
-        document.getElementById('demo-hectares').value = document.getElementById('hectares').value;
-        demoModal.style.display = 'block'; 
-    });
-
-    closeButton.addEventListener('click', function() {
-        demoModal.style.display = 'none'; 
-    });
-
-    window.addEventListener('click', function(event) {
-        if (event.target == demoModal) {
-            demoModal.style.display = 'none';
-        }
-    });
-
-    demoRequestForm.addEventListener('submit', function(event) {
-        event.preventDefault(); 
-        const formData = {
-            name: document.getElementById('demo-name').value,
-            email: document.getElementById('demo-email').value,
-            company: document.getElementById('demo-company').value,
-            hectares: document.getElementById('demo-hectares').value,
-            cropType: document.getElementById('demo-crop-type').value,
-        };
-
-        console.log("Form data collected:", formData);
-        
-        alert('Your demo request has been submitted! (Data not saved to spreadsheet in this demo)');
-        demoModal.style.display = 'none'; 
-        demoRequestForm.reset(); 
-    });
+    // --- Removed Modal Logic ---
+    // The previous modal-related JavaScript (event listeners for open/close, form submission)
+    // has been removed since the button now links directly to the Google Form.
 
     // Add event listeners for the newly editable cost inputs
     document.getElementById('hectares').addEventListener('input', calculateAndDisplayROI);
