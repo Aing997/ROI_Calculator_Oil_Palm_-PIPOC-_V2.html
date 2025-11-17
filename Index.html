@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced ROI Calculator | Cultivate-agri.com</title>
+    <style>
+        :root {
+            --primary-color: #2E7D32; --secondary-color: #4CAF50; --accent-color: #FFC107;
+            --text-color: #333; --bg-color: #f4f6f8; --border-color: #dee2e6;
+            --container-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+            --input-focus-shadow: 0 0 0 3px rgba(46, 125, 50, 0.25);
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color); color: var(--text-color); margin: 0; padding: 25px;
+            display: flex; justify-content: center; align-items: flex-start; min-height: 100vh;
+        }
+        .roi-calculator {
+            background-color: #fff; border-radius: 16px; box-shadow: var(--container-shadow);
+            width: 100%; max-width: 1100px; overflow: hidden; display: flex; flex-wrap: wrap;
+        }
+        .calculator-section { padding: 35px; box-sizing: border-box; }
+        .inputs-section { width: 45%; background-color: #fff; border-right: 1px solid var(--border-color); }
+        .outputs-section { width: 55%; background-color: #fcfdff; }
+        @media (max-width: 992px) {
+            .inputs-section, .outputs-section { width: 100%; border-right: none; }
+            .inputs-section { border-bottom: 1px solid var(--border-color); }
+        }
+        h2 { color: var(--primary-color); margin-top: 0; font-size: 1.8em; margin-bottom: 25px; }
+        h3 { color: var(--text-color); border-bottom: 2px solid var(--secondary-color); padding-bottom: 10px; margin-bottom: 20px; font-size: 1.2em; }
+        .form-group { margin-bottom: 20px; }
+        label { display: block; font-weight: 600; margin-bottom: 8px; font-size: 0.9em; }
+        input[type="number"], select, input[type="text"], input[type="email"] {
+            width: 100%; padding: 12px; border: 1px solid var(--border-color); border-radius: 8px;
+            box-sizing: border-box; font-size: 1em; transition: all 0.2s;
+        }
+        input[type="number"]:focus, select:focus, input[type="text"]:focus, input[type="email"]:focus {
+            outline: none; border-color: var(--primary-color); box-shadow: var(--input-focus-shadow);
+        }
+        /* Style for disabled inputs to make them look non-editable */
+        input[disabled], select[disabled] {
+            background-color: #e9ecef;
+            cursor: not-allowed;
+        }
+        .output-main-metrics {
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); 
+            gap: 20px; 
+            margin-bottom: 30px;
+        }
+        .metric-item { background-color: #fff; padding: 20px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); text-align: center;}
+        .metric-label { font-size: 0.9em; font-weight: 600; color: #555; margin-bottom: 8px; }
+        .metric-value { font-size: 2em; font-weight: 700; color: var(--primary-color); }
+        .comparison-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        .comparison-table th, .comparison-table td { padding: 14px; text-align: right; border-bottom: 1px solid var(--border-color); }
+        .comparison-table th { text-align: left; font-weight: 600; }
+        .comparison-table td:first-child { font-weight: 500; text-align: left; }
+        .comparison-table .profit-row td { font-weight: 700; border-top: 2px solid var(--secondary-color); }
+        .comparison-table .after-value { color: var(--primary-color); }
+        .cta-section { margin-top: 30px; padding: 20px; text-align: center; background-color: #f5f7fa; border-radius: 8px; }
+        .cta-section p { margin: 0 0 15px 0; font-size: 1.1em; }
+        .btn { background-color: var(--accent-color); color: #fff; border: none; border-radius: 8px; padding: 14px 28px; font-size: 1.1em; font-weight: 700; cursor: pointer; transition: all 0.3s; }
+        .btn:hover { background-color: #ffb300; transform: translateY(-2px); }
+
+        /* Modal specific styles */
+        .modal {
+            display: none; 
+            position: fixed; 
+            z-index: 1000; 
+            left: 0;
+            top: 0;
+            width: 100%; 
+            height: 100%; 
+            overflow: auto; 
+            background-color: rgba(0,0,0,0.4); 
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: 10% auto; 
+            padding: 25px;
+            border: 1px solid #888;
+            width: 80%; 
+            max-width: 500px;
+            border-radius: 10px;
+            position: relative;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+        }
+        .close-button {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .close-button:hover,
+        .close-button:focus {
+            color: #000;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        .modal-content h2 {
+            color: var(--primary-color);
+            margin-top: 0;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+            text-align: center;
+        }
+        .modal-content .form-group label {
+            font-size: 1em;
+            margin-bottom: 6px;
+        }
+        .modal-content .btn {
+            width: 100%;
+            margin-top: 20px;
+            padding: 15px;
+        }
+
+        /* Styles for new table structure */
+        .volume-discount-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        .volume-discount-table th, 
+        .volume-discount-table td {
+            padding: 10px 8px; 
+            border-bottom: 1px solid var(--border-color);
+        }
+        /* Align all cells in the volume discount table to the right by default */
+        .volume-discount-table td {
+            text-align: right; 
+        }
+        /* Override for the first column (Area) to align left */
+        .volume-discount-table th:first-child,
+        .volume-discount-table td:first-child {
+            text-align: left;
+        }
+        .volume-discount-table th {
+            text-align: center;
+            font-weight: 600;
+            background-color: #f8f9fa; 
+            vertical-align: middle; 
+        }
+        .volume-discount-table th.main-header {
+            text-align: left;
+            padding-left: 14px;
+        }
+        .volume-discount-table .sub-header {
+            font-size: 0.85em;
+            font-weight: 500;
+            color: #666;
+            display: block;
+            margin-top: 5px;
+        }
+        /* MODIFIED: Highlight only the text in the first cell */
+        .volume-discount-table td.highlight-area {
+            color: var(--primary-color); 
+            font-weight: 700; 
+        }
+    </style>
+</head>
+<body>
+
+<div class="roi-calculator">
+    <div class="calculator-section inputs-section">
+        <h2>Your Farm & Our Platform</h2>
+        <form id="roi-form">
+            <h3>Farm Details</h3>
+            <div class="form-group">
+                <label for="hectares">Total Hectares</label>
+                <input type="number" id="hectares" value="12000">
+            </div>
+            <div class="form-group">
+                <label for="crop-type">Crop Type</label>
+                <!-- Fixed to Oil Palm, disabled for user modification -->
+                <input type="text" id="crop-type-display" value="Oil Palm" disabled>
+                <input type="hidden" id="crop-type" value="oilpalm"> <!-- Hidden field for script to use -->
+            </div>
+            <div class="form-group">
+                <label for="yield">Current Yield (kg/ha)</label>
+                <input type="number" id="yield" value="17500">
+            </div>
+            <div class="form-group">
+                <label for="price">Current Farmgate Price ($/kg)</label>
+                <input type="number" id="price" value="0.15">
+            </div>
+
+            <h3>Annual Operating Costs ($/ha)</h3>
+            <div class="form-group">
+                <label for="fertilizer-cost">Fertilizer Cost</label>
+                <input type="number" id="fertilizer-cost" value="450">
+            </div>
+            <div class="form-group">
+                <label for="labor-cost">Labor Cost</label>
+                <input type="number" id="labor-cost" value="350">
+            </div>
+            <div class="form-group">
+                <label for="water-cost">Water & Irrigation Cost</label>
+                <input type="number" id="water-cost" value="40">
+            </div>
+
+            <h3>Platform & Scenario</h3>
+             <div class="form-group">
+                <label for="scenario">Benefit Scenario</label>
+                <select id="scenario">
+                    <option value="moderate">Moderate (Most Likely)</option>
+                    <option value="conservative">Conservative</option>
+                    <option value="optimistic">Optimistic</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="subscription-term">Subscription Term</label>
+                <select id="subscription-term">
+                    <option value="1-year">Annual Plan</option>
+                    <option value="3-year" selected>3-Year Plan (20% Discount)</option>
+                    <option value="5-year">5-Year Plan (30% Discount)</option>
+                </select>
+            </div>
+        </form>
+    </div>
+
+    <div class="calculator-section outputs-section">
+        <h2>Your Estimated Financial Impact</h2>
+        <div class="output-main-metrics">
+            <div class="metric-item">
+                <div class="metric-label">5-Year Net Benefit</div>
+                <div class="metric-value" id="net-benefit-5-year">$0</div>
+            </div>
+            <div class="metric-item">
+                <div class="metric-label">5-Year ROI</div>
+                <div class="metric-value" id="roi-5-year">0%</div>
+            </div>
+            <!-- Removed Payback Period section -->
+        </div>
+
+        <h3>Annual Financial Comparison</h3>
+        <table class="comparison-table">
+            <thead>
+                <tr>
+                    <th>Metric</th>
+                    <th>Before Platform</th>
+                    <th>After Platform</th>
+                </tr>
+            </thead>
+            <tbody id="comparison-body">
+                <!-- Rows will be dynamically inserted here -->
+            </tbody>
+        </table>
+
+        <h3>New Platform Costs</h3>
+        <table class="comparison-table">
+           <tr><td>One-Time Implementation</td><td id="implementation-cost-display">$0</td></tr>
+           <tr><td>Annual Subscription</td><td id="subscription-cost-display">$0</td></tr>
+        </table>
+
+        <h3>Volume Discount Tiers (Oil Palm)</h3>
+        <table class="volume-discount-table">
+            <thead id="volume-discount-header">
+                <!-- Dynamic header will be inserted here by JS -->
+            </thead>
+            <tbody id="volume-discount-body">
+                <!-- Volume discount rows will be dynamically inserted here by JS -->
+            </tbody>
+        </table>
+        
+        <div class="cta-section">
+            <p>Ready to unlock your farm's full potential? Let's talk.</p>
+            <a href="#" class="btn" id="openDemoModalBtn">Book a Personalized Demo</a>
+        </div>
+    </div>
+</div>
+
+<!-- Demo Request Modal -->
+<div id="demoModal" class="modal">
+    <div class="modal-content">
+        <span class="close-button">&times;</span>
+        <h2>Book Your Personalized Demo</h2>
+        <form id="demo-request-form">
+            <div class="form-group">
+                <label for="demo-name">Your Name</label>
+                <input type="text" id="demo-name" required>
+            </div>
+            <div class="form-group">
+                <label for="demo-email">Your Email</label>
+                <input type="email" id="demo-email" required>
+            </div>
+            <div class="form-group">
+                <label for="demo-company">Company/Farm Name</label>
+                <input type="text" id="demo-company">
+            </div>
+            <div class="form-group">
+                <label for="demo-hectares">Total Hectares</label>
+                <input type="number" id="demo-hectares" disabled> <!-- Pre-populated and disabled -->
+            </div>
+            <div class="form-group">
+                <label for="demo-crop-type">Crop Type</label>
+                <input type="text" id="demo-crop-type" value="Oil Palm" disabled> <!-- Pre-populated and disabled -->
+            </div>
+            <button type="submit" class="btn">Submit Demo Request</button>
+        </form>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('roi-form');
+
+    // --- Business Logic & Constants ---
+    const CROP_DATA = {
+        'oilpalm': { yield_improvement: 0.08, fertilizer_reduction: 0.12, labor_reduction: 0.05, water_reduction: 0.07, admin_reduction_ha: 22 }
+    };
+
+    const SCENARIO_MULTIPLIERS = {
+        'conservative': 0.75,
+        'moderate': 1.0,
+        'optimistic': 1.25
+    };
+
+    // MODIFIED: pricingData now includes all term-specific base prices
+    const pricingData = [
+        { CropName: "Oil Palm", AreaBreak: 0,   AreaBreakVal: 501,    BasePrice_USD_1yr: 6.18, BasePrice_USD_3yr: 5.6856, BasePrice_USD_5yr: 5.253, AgronomySvc_Default: "Standard-Advisory" },
+        { CropName: "Oil Palm", AreaBreak: 500, AreaBreakVal: 5001,   BasePrice_USD_1yr: 3.96, BasePrice_USD_3yr: 3.6432, BasePrice_USD_5yr: 3.366, AgronomySvc_Default: "Standard-Advisory" },
+        { CropName: "Oil Palm", AreaBreak: 5000, AreaBreakVal: 50001, BasePrice_USD_1yr: 3.10, BasePrice_USD_3yr: 2.852, BasePrice_USD_5yr: 2.635, AgronomySvc_Default: "Standard-Advisory" },
+        { CropName: "Oil Palm", AreaBreak: 50000, AreaBreakVal: 999999, BasePrice_USD_1yr: 1.80, BasePrice_USD_3yr: 1.656, BasePrice_USD_5yr: 1.53, AgronomySvc_Default: "Standard-Advisory" }
+    ];
+
+    // MODIFIED: TERM_OPTIONS no longer needs discount multipliers, but rather keys to access pricingData
+    const TERM_OPTIONS = {
+        '1-year': { name: '1-Year Plan', priceKey: 'BasePrice_USD_1yr' },
+        '3-year': { name: '3-Year Plan (20% Discount)', priceKey: 'BasePrice_USD_3yr' },
+        '5-year': { name: '5-Year Plan (30% Discount)', priceKey: 'BasePrice_USD_5yr' }
+    };
+
+    // --- Formatting Helpers ---
+    const formatCurrency = (num) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(num);
+    // Format per-hectare price with 2 decimal places
+    const formatPricePerHa = (num) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(num);
+    const formatPercent = (num) => `${num.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 1 })}%`;
+
+    // --- Tiered Pricing Functions ---
+    // MODIFIED: This function now directly retrieves the price based on the selected term's priceKey
+    const getAnnualSubPricePerHa = (hectares, term) => {
+        const termInfo = TERM_OPTIONS[term];
+        if (!termInfo || !termInfo.priceKey) return 0;
+
+        let pricePerHa = 0;
+        for (let i = pricingData.length - 1; i >= 0; i--) {
+            if (hectares >= pricingData[i].AreaBreak) {
+                pricePerHa = pricingData[i][termInfo.priceKey]; 
+                break;
+            }
+        }
+        return pricePerHa;
+    };
+    
+    // The getBase1YearPricePerHa function is no longer needed in this structure
+    // as the dynamic price per hectare is handled by getAnnualSubPricePerHa.
+    // If you need the *undiscounted* 1-year price for other calculations,
+    // you would retrieve pricingData[i].BasePrice_USD_1yr directly.
+
+    const getImplementationCost = (hectares) => {
+        const baseFee = 5000;
+        const variableFee = Math.min(hectares * 15, 50000); 
+        return baseFee + variableFee;
+    };
+
+    // --- Volume Discount Table Update Function ---
+    function updateVolumeDiscountTable(currentHectares) {
+        const volumeDiscountTableHead = document.getElementById('volume-discount-header');
+        const volumeDiscountTableBody = document.getElementById('volume-discount-body');
+        
+        const selectedTerm = document.getElementById('subscription-term').value;
+        const termInfo = TERM_OPTIONS[selectedTerm];
+        if (!termInfo) {
+            volumeDiscountTableHead.innerHTML = '';
+            volumeDiscountTableBody.innerHTML = '<tr><td colspan="3" style="text-align:center;">Please select a subscription term.</td></tr>'; // Adjusted colspan to 3
+            return;
+        }
+
+        // MODIFIED: Header structure updated to merge "Total Annual Cost (for X ha)"
+        volumeDiscountTableHead.innerHTML = `
+            <tr>
+                <th rowspan="2" class="main-header">Area (ha)</th>
+                <th colspan="2">Total Cost (for ${currentHectares} ha)</th>
+            </tr>
+            <tr>
+                <th>Price Per Hectare<br><span class="sub-header">${termInfo.name} ($/ha)</span></th>
+                <th>${termInfo.name} ($)</th>
+            </tr>
+        `;
+
+        volumeDiscountTableBody.innerHTML = ''; // Clear previous rows
+
+        pricingData.forEach((row, index) => {
+            let areaRange;
+            if (index === 0) { // First tier starts from 0
+                areaRange = `0 - ${row.AreaBreakVal - 1}`;
+            } else if (row.AreaBreakVal === 999999) { // Last tier is "X +"
+                areaRange = `${row.AreaBreak + 1} +`;
+            } else { // Intermediate tiers
+                areaRange = `${row.AreaBreak + 1} - ${row.AreaBreakVal - 1}`;
+            }
+            
+            // MODIFIED: Get the price per hectare specifically for the selected term
+            const pricePerHaForTerm = row[termInfo.priceKey]; 
+            
+            // The "total annual cost" is simply price per hectare for the term * current hectares.
+            const totalAnnualCostForTerm = pricePerHaForTerm * currentHectares;
+
+            // Determine if this is the current tier and apply the specific class for text highlight
+            let isCurrentTier = false;
+            // The logic for highlight should check if currentHectares falls into the range defined by AreaBreak and AreaBreakVal
+            if (currentHectares > row.AreaBreak && currentHectares <= (row.AreaBreakVal -1) ) {
+                isCurrentTier = true;
+            } else if (index === pricingData.length - 1 && currentHectares > pricingData[pricingData.length - 1].AreaBreak) {
+                // Special case for the last tier (e.g., 50000+), where AreaBreakVal is 999999
+                isCurrentTier = true;
+            } else if (index === 0 && currentHectares >=0 && currentHectares <= pricingData[0].AreaBreak) {
+                 // Special case for the first tier (0-500) if currentHectares is 0 or less than AreaBreakVal
+                isCurrentTier = true;
+            }
+
+
+            const areaCellClass = isCurrentTier ? 'class="highlight-area"' : '';
+
+            volumeDiscountTableBody.innerHTML += `
+                <tr>
+                    <td ${areaCellClass}>${areaRange}</td>
+                    <td>${formatPricePerHa(pricePerHaForTerm)}</td> <!-- Display price per hectare for the selected term -->
+                    <td>${formatCurrency(totalAnnualCostForTerm)}</td> <!-- Only one total annual cost column now -->
+                </tr>
+            `;
+        });
+    }
+
+    // --- Main Calculation Function ---
+    function calculateAndDisplayROI() {
+        const hectares = parseFloat(document.getElementById('hectares').value) || 0;
+        const crop = 'oilpalm'; 
+        const yield_ha = parseFloat(document.getElementById('yield').value) || 0;
+        const price_kg = parseFloat(document.getElementById('price').value) || 0;
+        const fertilizerCost_ha = parseFloat(document.getElementById('fertilizer-cost').value) || 0;
+        const laborCost_ha = parseFloat(document.getElementById('labor-cost').value) || 0;
+        const waterCost_ha = parseFloat(document.getElementById('water-cost').value) || 0;
+        const scenario = document.getElementById('scenario').value;
+        const term = document.getElementById('subscription-term').value; 
+
+        const drivers = CROP_DATA[crop];
+        const multiplier = SCENARIO_MULTIPLIERS[scenario];
+        const benefits = {
+            yield: drivers.yield_improvement * multiplier,
+            fertilizer: drivers.fertilizer_reduction * multiplier,
+            labor: drivers.labor_reduction * multiplier,
+            water: drivers.water_reduction * multiplier,
+            admin: drivers.admin_reduction_ha * multiplier 
+        };
+
+        const beforeRevenue = hectares * yield_ha * price_kg;
+        const beforeFertilizer = hectares * fertilizerCost_ha;
+        const beforeLabor = hectares * laborCost_ha;
+        const beforeWater = hectares * waterCost_ha;
+        const beforeTotalCost = beforeFertilizer + beforeLabor + beforeWater;
+        const beforeProfit = beforeRevenue - beforeTotalCost;
+
+        const revenueIncrease = beforeRevenue * benefits.yield;
+        const fertilizerSavings = beforeFertilizer * benefits.fertilizer;
+        const laborSavings = beforeLabor * benefits.labor;
+        const waterSavings = beforeWater * benefits.water;
+        const adminSavings = hectares * benefits.admin;
+        const totalAnnualGrossBenefit = revenueIncrease + fertilizerSavings + laborSavings + waterSavings + adminSavings;
+        
+        const afterRevenue = beforeRevenue + revenueIncrease;
+        const afterTotalCost = beforeTotalCost - fertilizerSavings - laborSavings - waterSavings - adminSavings;
+        const afterProfit = afterRevenue - afterTotalCost;
+
+        const implementationCost = getImplementationCost(hectares);
+        // Calculate the annual subscription cost based on the selected term and its specific price
+        let annualSubCost = hectares * getAnnualSubPricePerHa(hectares, term); 
+
+        const netAnnualBenefit = totalAnnualGrossBenefit - annualSubCost;
+        
+        const totalCost5Year = implementationCost + (annualSubCost * 5); 
+        const totalBenefit5Year = totalAnnualGrossBenefit * 5;
+        const netBenefit5Year = totalBenefit5Year - totalCost5Year;
+        const roi5Year = (totalCost5Year > 0) ? (netBenefit5Year / totalCost5Year) * 100 : 0;
+
+        document.getElementById('net-benefit-5-year').textContent = formatCurrency(netBenefit5Year);
+        document.getElementById('roi-5-year').textContent = formatPercent(roi5Year);
+        
+        document.getElementById('implementation-cost-display').textContent = formatCurrency(implementationCost);
+        document.getElementById('subscription-cost-display').textContent = formatCurrency(annualSubCost);
+
+        const tableBody = document.getElementById('comparison-body');
+        tableBody.innerHTML = `
+            <tr><th>Revenue</th><td>${formatCurrency(beforeRevenue)}</td><td class="after-value">${formatCurrency(afterRevenue)}</td></tr>
+            <tr><th>Fertilizer Cost</th><td>${formatCurrency(beforeFertilizer)}</td><td class="after-value">${formatCurrency(beforeFertilizer - fertilizerSavings)}</td></tr>
+            <tr><th>Labor Cost</th><td>${formatCurrency(beforeLabor)}</td><td class="after-value">${formatCurrency(beforeLabor - laborSavings)}</td></tr>
+            <tr><th>Water Cost</th><td>${formatCurrency(beforeWater)}</td><td class="after-value">${formatCurrency(beforeWater - waterSavings)}</td></tr>
+            <tr class="profit-row"><th>Total Profit</th><td>${formatCurrency(beforeProfit)}</td><td class="after-value">${formatCurrency(afterProfit)}</td></tr>
+        `;
+
+        updateVolumeDiscountTable(hectares); // Update the volume discount table
+    }
+
+    // --- Modal Logic ---
+    const openDemoModalBtn = document.getElementById('openDemoModalBtn');
+    const demoModal = document.getElementById('demoModal');
+    const closeButton = demoModal.querySelector('.close-button');
+    const demoRequestForm = document.getElementById('demo-request-form');
+
+    openDemoModalBtn.addEventListener('click', function(event) {
+        event.preventDefault(); 
+
+        document.getElementById('demo-hectares').value = document.getElementById('hectares').value;
+        demoModal.style.display = 'block'; 
+    });
+
+    closeButton.addEventListener('click', function() {
+        demoModal.style.display = 'none'; 
+    });
+
+    window.addEventListener('click', function(event) {
+        if (event.target == demoModal) {
+            demoModal.style.display = 'none';
+        }
+    });
+
+    demoRequestForm.addEventListener('submit', function(event) {
+        event.preventDefault(); 
+        const formData = {
+            name: document.getElementById('demo-name').value,
+            email: document.getElementById('demo-email').value,
+            company: document.getElementById('demo-company').value,
+            hectares: document.getElementById('demo-hectares').value,
+            cropType: document.getElementById('demo-crop-type').value,
+        };
+
+        console.log("Form data collected:", formData);
+        
+        alert('Your demo request has been submitted! (Data not saved to spreadsheet in this demo)');
+        demoModal.style.display = 'none'; 
+        demoRequestForm.reset(); 
+    });
+
+    // Add event listeners for the newly editable cost inputs
+    document.getElementById('hectares').addEventListener('input', calculateAndDisplayROI);
+    document.getElementById('yield').addEventListener('input', calculateAndDisplayROI);
+    document.getElementById('price').addEventListener('input', calculateAndDisplayROI);
+    document.getElementById('fertilizer-cost').addEventListener('input', calculateAndDisplayROI);
+    document.getElementById('labor-cost').addEventListener('input', calculateAndDisplayROI);
+    document.getElementById('water-cost').addEventListener('input', calculateAndDisplayROI);
+    document.getElementById('scenario').addEventListener('change', calculateAndDisplayROI);
+    document.getElementById('subscription-term').addEventListener('change', calculateAndDisplayROI);
+    
+    // Initial calculation on page load
+    calculateAndDisplayROI();
+});
+</script>
+</body>
+</html>
